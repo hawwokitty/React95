@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useState, useRef } from 'react';
 import type { ReactElement } from 'react';
 
 import { Frame } from '../Frame/Frame';
@@ -20,7 +20,6 @@ export const TaskBar = forwardRef<HTMLDivElement, TaskBarProps>(
     const [activeStart, toggleActiveStart] = useState(false);
     const [modalWindows, setModalWindows] = React.useState<ModalWindow[]>([]);
     const [activeWindow, setActiveWindow] = useState<string>();
-    // const [minimizedModals, setMinimizedModals] = useState<ModalWindow[]>([]);
 
     useEffect(() => {
       const addModal = (window: ModalWindow) => {
@@ -59,6 +58,28 @@ export const TaskBar = forwardRef<HTMLDivElement, TaskBarProps>(
       };
     }, []);
 
+    const listRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (
+          buttonRef.current &&
+          listRef.current &&
+          !listRef.current.contains(e.target as Node) &&
+          !buttonRef.current.contains(e.target as Node)
+        ) {
+          toggleActiveStart(false);
+          toggleShowList(false);
+        }
+      };
+
+      window.addEventListener('click', handleClickOutside);
+
+      return () => {
+        window.removeEventListener('click', handleClickOutside);
+      };
+    }, []);
+
     return (
       <Frame
         position="fixed"
@@ -79,6 +100,7 @@ export const TaskBar = forwardRef<HTMLDivElement, TaskBarProps>(
           <Frame
             position="absolute"
             bottom="28px"
+            ref={listRef}
             onClick={() => {
               toggleActiveStart(false);
               toggleShowList(false);
@@ -91,9 +113,11 @@ export const TaskBar = forwardRef<HTMLDivElement, TaskBarProps>(
           small
           icon={<Logo variant="32x32_4" />}
           active={activeStart}
+          ref={buttonRef}
           onClick={() => {
             toggleActiveStart(!activeStart);
             toggleShowList(!showList);
+            console.log('list toggled');
           }}
         >
           Start
